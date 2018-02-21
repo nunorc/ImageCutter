@@ -40,7 +40,7 @@ x.close()
 Another use directed a service backends is the JSON interface:
 
 ```
-Import ImageCutter
+import ImageCutter
 
 x = ImageCutter()
 x.process_json(args.infile, args.outfile)
