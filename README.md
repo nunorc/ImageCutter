@@ -1,5 +1,7 @@
 # ImageCutter
-A simple Python library intended to be the backend of a FITS Image Cut-Out service. It does support a more typical scripting usage.
+A simple Python library intended to be the backend of a FITS Image Cut-Out service. It also supports a more typical scripting usage.
+
+It is derived from mkdescut.py from the DESCut package https://github.com/mgckind/descut (see LICENSE.NSCA)
 
 ## Installation
 
