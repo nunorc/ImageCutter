@@ -1,1 +1,3 @@
-__all__ = ['ImageCutter']
+from ImageCutter import FITSImageCutter
+
+__all__ = ['FITSImageCutter']

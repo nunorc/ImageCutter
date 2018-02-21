@@ -1,4 +1,0 @@
-astropy==2.0.2
-numpy==1.13.3
-fitsio==0.9.11
-typing==3.6.2

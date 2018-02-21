@@ -18,7 +18,7 @@ Lightly massaged from the DESCUT program: https://github.com/mgckind/descut, see
 
 """
 
-class ImageCutter:
+class FITSImageCutter:
     
     infile: str
     fits_file: fitsio.FITS
@@ -60,11 +60,11 @@ class ImageCutter:
             ys = 1.0
 
         if 'ext' in kwargs:
-            ext = kwargs['ext']
+            hdu = kwargs['hdu']
         else: 
-            ext = ['SCI']
+            hdu = ['SCI']
 
-        self.fits_cut(ra, dec, out, req=req, xs=xs, ys=ys, hdu=ext)        
+        self.fits_cut(ra, dec, out, req=req, xs=xs, ys=ys, hdu=hdu)        
 
     # cut function for individual exposure
     def fits_cut(self, ra: float, dec: float, outfile: str, \
@@ -155,6 +155,7 @@ class ImageCutter:
             req_output['VOX:Image_Title'] = 'Cutout from {}'.format(self.infile) #Can't think of anything better here
             req_output['POS_EQ_RA_MAIN'] = ra # Ditto
             req_output['POS_EQ_DEC_MAIN'] = dec # Ditto
+            req_output['CUTSIZE'] = [xs / 60, ys / 60] # degrees           
             req_output['VOX:Image_Naxes'] = 2
             req_output['VOX:Image_Naxis'] = [naxis1, naxis2]
             req_output['VOX:Image_Scale'] = [scale[0].tolist(), scale[1].tolist()]
@@ -205,7 +206,7 @@ class ImageCutter:
 def test():
     print('Test 0')
     
-    x = ImageCutter()
+    x = FITSImageCutter()
 
     # Test not opened file yet
     print('Test 1')
@@ -264,14 +265,14 @@ def test():
    
 if __name__ == "__main__":
 
-    cutter = ImageCutter()
+    cutter = FITSImageCutter()
     
 #    test()
     
     parser = argparse.ArgumentParser(description = 'ImageCutter')
     parser.add_argument('infile', help='Input JSON file')
     parser.add_argument('outfile', help='Output JSON file')
-    args = parser.parse_args()
-    cutter.process_json(args.infile, args.outfile)
+#    args = parser.parse_args()
+#    cutter.process_json(args.infile, args.outfile)
 
-#    cutter.process_json('test/input.json', 'test/out.json')
+    cutter.process_json('test/input.json', 'test/out.json')
