@@ -17,9 +17,9 @@ In the longer term this package should migrate to using PyFITS which will resolv
 ### Scripting
 
 ```
-import ImageCutter
+from ImageCutter import FITSImageCutter
 
-x = ImageCutter()
+x = FITSImageCutter()
 
 # open the FITS file
 x.prepare('test/test.fits')
@@ -27,23 +27,24 @@ x.prepare('test/test.fits')
 # Request a cutout at RA=9.2234028, Dec=-19.421379 to be saved into 'out4.fits' from HDU named 'SCI'. The cut out size is 1.0x1.0 arc minutes in size 
 x.fits_cut(9.2234028, -19.421379, 'out1.fits')
 
-# Request a cutout at RA=9.2234028, Dec=-19.421379 to be saved into 'out4.fits' from HDUs named 'SCI' and 'MSK'. The cut out size is 0.6x0.4 arc minutes in size 
-x.fits_cut(9.2234028, -19.421379, xs=0.6, ys=0.4, hdu=['SCI','MSK'], 'out2.fits')
+# Request a cutout at RA=9.2234028, Dec=-19.421379 to be saved into 'out4.fits' from HDUs named 'SCI'. The cut out size is 0.6x0.4 arc minutes in size 
+x.fits_cut(9.2234028, -19.421379, 'out2.fits', xs=0.6, ys=0.4, hdu=['SCI'])
 
 # More requests...
 
 # Close file
 x.close()
+
 ```
 
 ### Service backend
 Another use directed a service backends is the JSON interface:
 
 ```
-import ImageCutter
+from ImageCutter import FITSImageCutter
 
-x = ImageCutter()
-x.process_json(args.infile, args.outfile)
+x = FITSImageCutter()
+x.process_json('test/input.json', 'test/out.json')
 ```
 Will read a JSON file with the list of requests for a given source FITS file, and produce a JSON file with the results. Here is an example of a input file:
 ```
