@@ -17,7 +17,7 @@ In the longer term this package should migrate to using PyFITS which will resolv
 ### Scripting
 
 ```
-Import ImageCutter
+import ImageCutter
 
 x = ImageCutter()
 
