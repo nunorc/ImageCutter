@@ -8,4 +8,10 @@ setup(name='ImageCutter',
       author_email='johnhoar@yahoo.co.uk',
       license='BSD',
       packages=['ImageCutter'],
+      install_requires=[
+	'astropy',
+	'numpy',
+	'fitsio',
+	'typing'
+      ],
       zip_safe=False)

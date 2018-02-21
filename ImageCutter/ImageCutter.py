@@ -274,4 +274,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cutter.process_json(args.infile, args.outfile)
 
-    cutter.process_json('test/input.json', 'test/out.json')
+#    cutter.process_json('test/input.json', 'test/out.json')
