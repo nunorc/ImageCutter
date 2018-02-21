@@ -18,30 +18,27 @@ Lightly massaged from the DESCUT program: https://github.com/mgckind/descut, see
 
 """
 
-class Cutter:
+class ImageCutter:
     
     infile: str
     fits_file: fitsio.FITS
     output: Dict = {'log':[], 'requests':[]}
-    
-    
+        
     def prepare(self, infile: str):
         try:
-            self.fits_file = fitsio.FITS(infile, 'r')
+            self.output['input'] = infile
             self.infile = infile
-        except OSError:
-            self.output['log'].append('Error! Input FITS file {} not found or could not be loaded'.format(infile))
-
-        self.output['input'] = infile
-
-    def close(self) -> Dict:
+            self.fits_file = fitsio.FITS(infile, 'r')
+        except Exception as err:
+            self.output['log'].append('Error! {}'.format(err))
+            raise
+        
+    def close(self):
         try:
             self.fits_file.close()
-        except OSError:
-            self.output['log'].append('Error! Failed to close FITS file')
-
-        return self.output
-
+        except Exception as err:
+            self.output['log'].append('Error! {}'.format(err))
+ 
     def fits_cutkw(self, **kwargs):
         ra = float(kwargs['ra'])
         dec = float(kwargs['dec'])
@@ -80,22 +77,16 @@ class Cutter:
         try:
             # We get the WCS info from the first extension in the list
             header = self.fits_file[hdu[0]].read_header()
-        except OSError:
-            req_output['log'].append('Error! HDU {} not found or could not be loaded'.format(hdu))
-            return
-        except AttributeError:
-            req_output['log'].append('Error! FITS file not loaded')
-            return
-        except TypeError:
-            req_output['log'].append('Error: File closed')
-            return
+        except Exception as err:
+            req_output['log'].append('Error! {}'.format(err))
+            raise
             
         # Read in the WCS with astropy wcs
         try:
             image_wcs = wcs.WCS(header)
-        except Exception:
-            req_output['log'].append('Error! No WCS information loaded')
-            return
+        except Exception as err:
+            req_output['log'].append('Error! {}'.format(err))
+            raise
         
         # Get the pixel-scale of the input image
         scale = wcs.utils.proj_plane_pixel_scales(image_wcs)
@@ -128,9 +119,9 @@ class Cutter:
 
         try:
             ofits = fitsio.FITS(outfile, 'rw', clobber=True)
-        except OSError:
-            req_output['log'].append('Error! Could not open new FITS file {}'.format(outfile))
-            return
+        except Exception as err:
+            req_output['log'].append('Error! {}'.format(err))
+            raise
     
         # For each extension
         for ext in hdu:
@@ -157,16 +148,12 @@ class Cutter:
             
             # Write extension
             ofits.write(image, header=new_header, extname=ext)
-            
-            # Calculate 'characteristic observation time'
-            startDate = hdr['MJD-OBS'] + hdr['EXPTIME'] / 2.0 / 86400.0
-            
+                        
             req_output['OUTPUT'] = outfile            
 
             # Bunch of keywords which the SIA V1 Spec requires
             req_output['VOX:Image_Title'] = 'Cutout from {}'.format(self.infile) #Can't think of anything better here
-            req_output['INST_ID'] = 'Euclid' # This shoudl come from the source FITS
-            req_output['VOX:Image_MJDateObs'] = startDate
+            req_output['POS_EQ_RA_MAIN'] = ra # Ditto
             req_output['POS_EQ_DEC_MAIN'] = dec # Ditto
             req_output['VOX:Image_Naxes'] = 2
             req_output['VOX:Image_Naxis'] = [naxis1, naxis2]
@@ -176,63 +163,75 @@ class Cutter:
         # Write out the file
         try:
             ofits.close()
-        except OSError:
-            req_output['log'].append('Error! Could not close FITS file {}'.format(outfile))
-            return
+        except Exception as err:
+            req_output['log'].append('Error! {}'.format(err))
+            raise
         
         req_output['log'].append('OK')
         self.output['requests'].append(req_output)
         
 
-def process_json(infile: str, outfile: str):
-      
-    # Open input and output file
-    with open(infile) as datafile:    
-        data = json.load(datafile)
-    
-    # Open file
-    inputFile = data['input']
-    
-    if inputFile is None:
-        print('Error! No input FITS file from JSON')
-        return
-    
-    cutter = Cutter()
-    cutter.prepare(inputFile)
-    
-    # For each record
-    for reqs in data['request']:
-        cutter.fits_cutkw(**reqs)
-    
-    # Close file
-    out = cutter.close()
-    
-    # Return log
-    with open(outfile, 'w') as ofile:
-        json.dump(out, ofile, indent=4)
+    def process_json(self, infile: str, outfile: str):
+          
+        # Open input and output file
+        with open(infile) as datafile:    
+            data = json.load(datafile)
+        
+        # Open file
+        inputFile = data['input']
+        
+        if inputFile is None:
+            self.output['log'].append('Error! No input FITS file from JSON')
+            return
+        
+        try:
+            self.prepare(inputFile)
+            # For each record
+            for reqs in data['request']:
+                self.fits_cutkw(**reqs)
+
+        except Exception:
+            self.output['log'].append('Error! Processing failed')
+            
+        else:
+            # Close file
+            self.close()
+        
+        # Return log
+        with open(outfile, 'w') as ofile:
+            json.dump(self.output, ofile, indent=4)
     
     
 def test():
     print('Test 0')
     
-    x = Cutter()
+    x = ImageCutter()
 
     # Test not opened file yet
     print('Test 1')
-    x.fits_cut(req='Test 1', ra=8.80701523121, dec=-19.434399444444445,outfile='out1.fits')
-
+    try:
+        x.fits_cut(req='Test 1', ra=8.80701523121, dec=-19.434399444444445,outfile='out1.fits')
+    except Exception as err:
+        print('Failed as expected: {}'.format(err))
+    
     # Test missing file
     print('Test 2')
-    x.prepare('Nothing.fits')
+    try:
+        x.prepare('Nothing.fits')
+    except Exception as err:
+        print('Failed as expected: {}'.format(err))
     
     # Normal case, open file
     print('Test 3')
-    x.prepare('EUC_VIS_SWL-STK-000-000000-0000000__20170525T021703.1Z_00.00.fits')
+    x.prepare('test/test.fits')
     
     # Test wrong HDU
     print('Test 4')
-    x.fits_cut(req='Test 2', ra=8.80701523121, dec=-19.434399444444445, xs=1.0, ys=1.0, hdu=['NOTHERE'], outfile='out1.fits')
-    
+    try:
+        x.fits_cut(req='Test 2', ra=8.80701523121, dec=-19.434399444444445, xs=1.0, ys=1.0, hdu=['NOTHERE'], outfile='out1.fits')
+    except Exception as err:
+        print('Failed as expected: {}'.format(err))
+   
     # Normal case
     print('Test 5')
     x.fits_cut(req='Test 3', ra=8.80701523121, dec=-19.434399444444445, xs=1.0, ys=1.0, hdu=['SCI'], outfile='out1.fits')
@@ -258,15 +257,21 @@ def test():
     
     # Test reading closed file
     print('Test 11')
-    x.fits_cut('Test 7', 9.2234028, -19.421379, 1.0, 1.0, 'SCI', 'out6.fits')
+    try:
+        x.fits_cut('Test 7', 9.2234028, -19.421379, 1.0, 1.0, 'SCI', 'out6.fits')
+    except Exception as err:
+        print('Failed as expected: {}'.format(err))
    
 if __name__ == "__main__":
+
+    cutter = ImageCutter()
     
-    parser = argparse.ArgumentParser(description = 'Cutter')
+#    test()
+    
+    parser = argparse.ArgumentParser(description = 'ImageCutter')
     parser.add_argument('infile', help='Input JSON file')
     parser.add_argument('outfile', help='Output JSON file')
+    args = parser.parse_args()
+    cutter.process_json(args.infile, args.outfile)
 
-#    args = parser.parse_args()
-#    process_json(args.infile, args.outfile)
-
-    process_json('input.json', 'out.json')
+    cutter.process_json('test/input.json', 'test/out.json')
