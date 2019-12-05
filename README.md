@@ -9,7 +9,7 @@ It is derived from mkdescut.py from the DESCut package https://github.com/mgckin
 pip install git+https://github.com/jhoar/ImageCutter.git
 ```
 
-This should install the package and dependencies; on Windows platforms there may be a probelm installing the fitsio package if there is no compiler available, see
+This should install the package and dependencies; on Windows platforms there may be a problem installing the fitsio package if there is no compiler available, see
 https://stackoverflow.com/questions/29376834/how-to-install-the-fitsio-package-in-python
 
 In the longer term this package should migrate to using PyFITS which will resolve this problem
