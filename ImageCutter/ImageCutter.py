@@ -76,7 +76,7 @@ class FITSImageCutter:
         # Get the header
         try:
             # We get the WCS info from the first extension in the list
-            header = self.fits_file[hdu[0]].read_header()
+            header = self.fits_file[0].read_header()
         except Exception as err:
             req_output['log'].append('Error! {}'.format(err))
             raise
@@ -127,13 +127,13 @@ class FITSImageCutter:
         for ext in hdu:
             
             # Read the extension header
-            hdr = self.fits_file[ext].read_header()
+            hdr = self.fits_file[0].read_header()
             
             # Create a canvas
             image = numpy.zeros((naxis1, naxis2))
         
             # Read in the image section we want for SCI/WGT/MSK
-            image = self.fits_file[ext][y1:y2, x1:x2]
+            image = self.fits_file[0][y1:y2, x1:x2]
         
             # make deepcopy of orginal header
             new_header = wcs.WCS.deepcopy(hdr)
@@ -147,7 +147,7 @@ class FITSImageCutter:
             new_header['DEC_CUT'] = dec
             
             # Write extension
-            ofits.write(image, header=new_header, extname=ext)
+            ofits.write(image, header=new_header, extname='')
                         
             req_output['OUTPUT'] = outfile            
 
