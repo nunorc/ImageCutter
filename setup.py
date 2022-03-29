@@ -8,5 +8,5 @@ setup(name='ImageCutter',
       author_email='johnhoar@yahoo.co.uk',
       license='BSD',
       packages=['ImageCutter'],
-      install_requires=[ ],
+      install_requires=['fitsio'],
       zip_safe=False)
