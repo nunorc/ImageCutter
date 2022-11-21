@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import warnings
+warnings.filterwarnings('ignore')
+
 import argparse
 import json
 from typing import List, Dict
@@ -8,6 +11,8 @@ from typing import List, Dict
 import fitsio
 import numpy
 from astropy import wcs
+
+
 
 """
 Created on Mon Feb 19 07:05:54 2018
